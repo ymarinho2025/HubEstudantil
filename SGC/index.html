@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Club Management System</title>
+    <link rel="stylesheet" href="./src/css/style.css">
+    <link rel="stylesheet" href="./src/css/form.css">
+</head>
+
+<body>
+    <header><img
+            src="./src/images/dsa.png"
+            alt="Logos dos clubes"></header>
+    <h1 id="title">Club Management System</h1>
+    <main>
+        <form id="loginForm" novalidate>
+            <label id="userLabel" for="login">Your username:</label>
+            <input id="login" autocomplete="username" placeholder="Enter your username">
+            <label id="passLabel" for="senha">Your password:</label>
+            <input id="senha" type="password" minlength="6" maxlength="30" autocomplete="current-password"
+                placeholder="Type the password">
+            <div id="captcha" title="Clique para gerar outro código"></div>
+            <label id="codeLabel" for="codigo">Complete the code:</label>
+            <input id="codigo" maxlength="4" placeholder="CODE DISPLAYED ABOVE" autocomplete="off">
+            <button id="submitText" type="submit">To access CMS</button>
+            <a id="accountText" class="button" href="https://sg.sdasystems.org/cms/paises.php?lang=en">Request An
+                Account</a>
+            <div class="flags">
+                <img src="./src/images/brasil.jfif"   
+                alt="Português" data-lang="pt">
+                <img src="./src/images/espanha.jfif"
+                    alt="Español" data-lang="es">
+                <img src="./src/images/"
+                    alt="English" data-lang="en">
+            </div>
+            <div class="links"><a id="privacyText"
+                    href="https://www.adventistas.org/pt/institucional/organizacao/politica-de-privacidade-de-dados-da-igreja-adventista-do-setimo-dia/"
+                    target="_blank">Privacy Policy</a><a id="forgotText"
+                    href="https://sg.sdasystems.org/cms/senha.php?lang=en">Forgot password?</a></div>
+            <div id="msg" aria-live="polite"></div>
+        </form>
+    </main>
+    <script src="./src/js/login.js"></script>
+</body>
+
+</html>

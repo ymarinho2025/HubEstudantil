@@ -1,0 +1,69 @@
+.simple-login-fieldset {
+  border: 1px solid var(--gray-200);
+  border-radius: 16px;
+  padding: 22px 18px 18px;
+  background: rgba(255, 255, 255, 0.94);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.simple-login-fieldset legend {
+  font-family: 'Nunito', sans-serif;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--navy);
+  padding: 0 8px;
+}
+
+.simple-login-fieldset label {
+  font-family: 'Nunito', sans-serif;
+  font-size: .9rem;
+  font-weight: 700;
+  color: var(--gray-600);
+}
+
+.simple-login-fieldset input[type="text"],
+.simple-login-fieldset input[type="password"] {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: 10px;
+  background: var(--gray-100);
+  color: var(--navy);
+  font-size: .95rem;
+  outline: none;
+  transition: .25s;
+}
+
+.simple-login-fieldset input[type="text"]:focus,
+.simple-login-fieldset input[type="password"]:focus {
+  border-color: var(--navy);
+  background: var(--white);
+  box-shadow: 0 0 0 3px rgba(0, 50, 100, .10);
+}
+
+.simple-login-fieldset input[type="submit"] {
+  margin-top: 8px;
+  width: 100%;
+  padding: 13px 18px;
+  border: none;
+  border-radius: 12px;
+  background: var(--navy);
+  color: var(--white);
+  font-family: 'Nunito', sans-serif;
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: .25s;
+}
+
+.simple-login-fieldset input[type="submit"]:hover {
+  background: var(--navy-h);
+  transform: translateY(-1px);
+}
+
+.register-link-box {
+  margin-top: 14px;
+  text-align: center;
+}
