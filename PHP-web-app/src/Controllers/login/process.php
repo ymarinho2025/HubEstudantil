@@ -1,6 +1,6 @@
 <?php
 $pdo = require __DIR__ . '/../db.php';
-require_once dirname(__DIR__, 4) . '/config/auth.php';
+require_once dirname(__DIR__, 3) . '/config/auth.php';
 
 $mensagem = '';
 

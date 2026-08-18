@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once dirname(__DIR__) . '/config/auth.php';
+require_once __DIR__ . '/config/auth.php';
 
 $pdo = hub_pdo();
 $loginErro = '';
@@ -100,7 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="flags">
                 <img src="./src/images/brasil.jfif" alt="Português" data-lang="pt">
                 <img src="./src/images/espanha.jfif" alt="Español" data-lang="es">
-                <img src="./src/images/" alt="English" data-lang="en">
+                <img src="./src/images/eua.jfif" alt="English" data-lang="en">
             </div>
 
             <div class="links">

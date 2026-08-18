@@ -2,23 +2,7 @@
 require_once __DIR__ . '/load_env.php';
 require_once __DIR__ . '/database.php';
 
-$autoloadCandidates = [
-    dirname(__DIR__) . '/PHP-web-app/vendor/autoload.php',
-    dirname(__DIR__) . '/GameHub/vendor/autoload.php',
-];
-
-$autoloadLoaded = false;
-foreach ($autoloadCandidates as $autoload) {
-    if (is_file($autoload)) {
-        require_once $autoload;
-        $autoloadLoaded = true;
-        break;
-    }
-}
-
-if (!$autoloadLoaded) {
-    throw new RuntimeException('vendor/autoload.php não encontrado. Execute composer install ou mantenha a pasta vendor no projeto.');
-}
+require_once dirname(__DIR__) . '/vendor/autoload.php';
 
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;

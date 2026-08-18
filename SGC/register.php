@@ -1,5 +1,5 @@
 <?php
-require_once dirname(__DIR__) . '/config/auth.php';
+require_once __DIR__ . '/config/auth.php';
 $pdo = hub_pdo();
 $mensagem = '';
 $success = false;
