@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../../../src/Controllers/login/auth.php';
 header('Content-Type: application/json; charset=utf-8');
-$gameSlug = 'flappy-bird';
+$gameSlug = 'joao-bird';
 $stmt = $pdo->prepare('SELECT id FROM games WHERE slug=:slug AND active=TRUE LIMIT 1');
 $stmt->execute([':slug'=>$gameSlug]);
 $game = $stmt->fetch();

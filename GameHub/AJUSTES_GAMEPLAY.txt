@@ -1,0 +1,6 @@
+AJUSTES DE GAMEPLAY
+- João Bird: pergunta extra pausa/congela a física; após responder continua sem perda gratuita.
+- Datilografia: primeiro caractere errado interrompe a rodada, retorna ao início da palavra anterior, mostra a palavra correta, abre pergunta sem prêmio de QI e, ao acertar, reinicia todo o progresso.
+- Snake: loop refeito para impedir spam de perguntas; uma pergunta por morte; velocidade fixa de 145 ms; 8 segmentos iniciais; cobra verde; comida vermelha.
+- Space Invaders: formação fixa 4x8, margens laterais equivalentes à largura da nave, dificuldade previsível; tiro por Espaço/Enter e clique/toque na tela.
+- Paint, Piano e Pixel Art: pergunta educacional automática a cada 60 segundos; interface bloqueia a interação enquanto a pergunta está aberta.

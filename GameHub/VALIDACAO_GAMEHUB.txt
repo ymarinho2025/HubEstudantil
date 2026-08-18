@@ -1,0 +1,18 @@
+VALIDAÇÃO FINAL DO GAMEHUB
+
+Arquivos PHP verificados: 35
+Erros de sintaxe PHP: 0
+Arquivos JavaScript verificados: 89
+Erros de sintaxe JavaScript: 0
+Referências locais HTML verificadas: 25
+Referências locais quebradas: 0
+
+JOGOS:
+OK - João Bird
+OK - Corrida de Datilografia
+OK - Paint
+OK - Piano
+OK - Pixel Art
+OK - Snake
+OK - Space Invaders
+OK - Super Mario

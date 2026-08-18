@@ -1,0 +1,12 @@
+GAMEHUB — CORREÇÕES DE INTERFACE E QI
+
+1. Área do jogo ampliada e centralizada para evitar cortes e barras internas desnecessárias.
+2. O jogo abre imediatamente. A pergunta aparece APÓS morte/fim de rodada.
+3. Cada resposta correta adiciona +10 pontos de QI no banco.
+4. A Home mostra os pontos de QI do usuário.
+5. João Bird continua como jogo principal e seu recorde aparece em destaque na Home.
+6. João Bird: transição de Game Over reduzida para 1 segundo e reinício após resposta.
+7. Snake: cobra sempre verde, maçã sempre vermelha e tamanho inicial de 8 quadrados.
+8. Snake e Space Invaders enviam evento de morte para a interface educacional.
+9. Datilografia gera desafio ao concluir a rodada.
+10. Mario permanece removido.

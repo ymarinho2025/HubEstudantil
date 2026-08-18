@@ -25,9 +25,20 @@ CREATE TABLE IF NOT EXISTS games (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-INSERT INTO games(slug, title, description, cover_url, game_url)
-VALUES ('flappy-bird', 'Flappy Bird', 'Passe entre os canos e tente bater seu recorde.', '/games/flappy/sprites.png', '/games/flappy/')
-ON CONFLICT (slug) DO UPDATE SET title=EXCLUDED.title, description=EXCLUDED.description, cover_url=EXCLUDED.cover_url, game_url=EXCLUDED.game_url, active=TRUE;
+
+UPDATE games SET active=FALSE WHERE slug IN ('flappy-bird','super-mario');
+
+INSERT INTO games(slug,title,description,cover_url,game_url,active) VALUES
+('joao-bird','João Bird','Matemática, cálculo mental, atenção e tomada de decisão.','/games/JoaoBird/bg.png','/play.php?game=joao-bird',TRUE),
+('datilografia','Corrida de Datilografia','Língua Portuguesa, ortografia e fluência na escrita.',NULL,'/play.php?game=datilografia',TRUE),
+('paint','Paint Criativo','Arte, criatividade, composição e teoria das cores.',NULL,'/play.php?game=paint',TRUE),
+('piano','Piano Musical','Música, percepção sonora, ritmo e sequência musical.',NULL,'/play.php?game=piano',TRUE),
+('pixel-art','Pixel Art','Arte e Matemática, geometria, padrões e criatividade.',NULL,'/play.php?game=pixel-art',TRUE),
+('snake','Snake Lógico','Raciocínio lógico, planejamento espacial e estratégia.',NULL,'/play.php?game=snake',TRUE),
+('space-invaders','Space Invaders Ciência','Ciências, astronomia básica, atenção e coordenação.',NULL,'/play.php?game=space-invaders',TRUE)
+ON CONFLICT (slug) DO UPDATE SET
+title=EXCLUDED.title,description=EXCLUDED.description,cover_url=EXCLUDED.cover_url,
+game_url=EXCLUDED.game_url,active=EXCLUDED.active;
 
 CREATE TABLE IF NOT EXISTS game_scores (
     id BIGSERIAL PRIMARY KEY,
@@ -64,3 +75,19 @@ CREATE TRIGGER trg_game_scores_updated_at
 BEFORE UPDATE ON game_scores
 FOR EACH ROW
 EXECUTE FUNCTION set_updated_at();
+
+
+CREATE TABLE IF NOT EXISTS qi_points (
+    user_id INT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    points INT NOT NULL DEFAULT 0 CHECK (points >= 0),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS qi_history (
+    id BIGSERIAL PRIMARY KEY,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    game_slug VARCHAR(60) NOT NULL,
+    points INT NOT NULL DEFAULT 10 CHECK (points > 0),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_qi_history_user ON qi_history(user_id, created_at DESC);

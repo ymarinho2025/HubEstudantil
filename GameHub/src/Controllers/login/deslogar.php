@@ -1,5 +1,7 @@
 <?php
-if (isset($_GET['deslogar'])) {
-    setcookie('auth_token', '', ['expires'=>time()-3600,'path'=>'/','httponly'=>true,'secure'=>false,'samesite'=>'Lax']);
-    header('Location: /login.php'); exit;
+require_once dirname(__DIR__,3).'/config/auth.php';
+if(isset($_GET['deslogar'])){
+    gamehub_clear_cookie();
+    header('Location: /login.php');
+    exit;
 }

@@ -1,0 +1,7 @@
+GAMEHUB REBUILD
+Todos os 7 jogos começam bloqueados por uma pergunta educacional.
+Paint/Piano/Pixel Art exibem cronômetro 01:00 visível.
+Snake refeito: movimento contínuo, setas + clique/toque, 8 segmentos, verde, alimento vermelho, 1 pergunta por morte.
+Defesa Espacial refeita do zero: formação 8 colunas, 3-5 linhas, nave com 3 vidas, tiros Espaço/clique, controles A/D e setas, dificuldade progressiva.
+PHP errors: 0
+JS errors: 0

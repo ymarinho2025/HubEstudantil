@@ -1,110 +1,27 @@
 <?php
-require_once __DIR__ . '/../src/Controllers/login/deslogar.php';
-require_once __DIR__ . '/../src/Controllers/login/auth.php';
-$games = $pdo->query("SELECT g.*, COALESCE(s.best_score,0) best_score, COALESCE(s.last_score,0) last_score FROM games g LEFT JOIN game_scores s ON s.game_id=g.id AND s.user_id=".(int)$authUser['id']." WHERE g.active=TRUE ORDER BY g.id")->fetchAll();
-$ranking = $pdo->query("SELECT u.name, gs.best_score FROM game_scores gs JOIN users u ON u.id=gs.user_id JOIN games g ON g.id=gs.game_id WHERE g.slug='flappy-bird' ORDER BY gs.best_score DESC, gs.updated_at ASC LIMIT 10")->fetchAll();
+require_once __DIR__.'/../src/Controllers/login/deslogar.php';
+require_once __DIR__.'/../src/Controllers/login/auth.php';
+require_once __DIR__.'/../src/game_catalog.php';
+require_once __DIR__.'/../src/educational_catalog.php';
+gamehub_sync_catalog($pdo);
+$edu=gamehub_educational_catalog();
+$games=$pdo->query("SELECT g.*,COALESCE(s.best_score,0) best_score,COALESCE(s.last_score,0) last_score FROM games g LEFT JOIN game_scores s ON s.game_id=g.id AND s.user_id=".(int)$authUser['id']." WHERE g.active=TRUE ORDER BY g.id")->fetchAll();
+$joaoBest=0;foreach($games as $g){if($g['slug']==='joao-bird')$joaoBest=(int)$g['best_score'];}
+$pdo->exec("CREATE TABLE IF NOT EXISTS qi_points (user_id INT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,points INT NOT NULL DEFAULT 0,updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW())");
+$qiStmt=$pdo->prepare("SELECT points FROM qi_points WHERE user_id=:u");$qiStmt->execute([':u'=>(int)$authUser['id']]);$qiPoints=(int)($qiStmt->fetchColumn()?:0);
+$ranking=$pdo->query("SELECT u.name,gs.best_score FROM game_scores gs JOIN users u ON u.id=gs.user_id JOIN games g ON g.id=gs.game_id WHERE g.slug='joao-bird' ORDER BY gs.best_score DESC,gs.updated_at ASC LIMIT 10")->fetchAll();
 ?>
-<!doctype html>
-<html lang="pt-BR">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>GameHub</title>
-  <link rel="stylesheet" href="/css/style.css">
-</head>
-<body>
-
-<!-- Marquee bar -->
-<div class="marquee-bar">
-  <span class="marquee-inner">
-    &nbsp;★ GAMEHUB ARCADE &nbsp;★ INSERT COIN &nbsp;★ HIGH SCORES &nbsp;★ 1 PLAYER START &nbsp;★ GAME OVER &nbsp;★ CONTINUE? &nbsp;★ FLAPPY BIRD &nbsp;★ PRESS START &nbsp;★ NEW RECORD &nbsp;★ LEVEL UP &nbsp;★ GAMEHUB ARCADE &nbsp;★ INSERT COIN &nbsp;★ HIGH SCORES &nbsp;★ 1 PLAYER START &nbsp;★ GAME OVER &nbsp;★ CONTINUE? &nbsp;★ FLAPPY BIRD &nbsp;★ PRESS START &nbsp;★ NEW RECORD &nbsp;★ LEVEL UP &nbsp;
-  </span>
-</div>
-
-<header class="topbar">
-  <div class="brand">
-    <span class="brand-icon">G</span>
-    <span class="brand-text">GameHub</span>
-  </div>
-  <div class="actions">
-    <span><?= htmlspecialchars($userName) ?></span>
-    <a class="btn secondary" href="?deslogar=1">Sair</a>
-  </div>
-</header>
-
-<main class="container">
-
-  <!-- Hero -->
-  <section class="hero">
-    <div class="panel">
-      <div style="font-family:'Orbitron',monospace; font-size:9px; letter-spacing:3px; color:var(--muted); margin-bottom:12px; text-transform:uppercase;">
-        // Sistema Online — NeonDB PostgreSQL
-      </div>
-      <h1>GAME<br>HUB</h1>
-      <p class="muted">O Flappy Bird é o primeiro jogo conectado ao login. Sua melhor pontuação fica salva por usuário no PostgreSQL/NeonDB.</p>
-      <div class="status-pills">
-        <span class="pill online">● Sistema online</span>
-        <span class="pill scorepill">◆ Scores salvos</span>
-      </div>
-    </div>
-
-    <div class="panel score-box" style="padding:20px;">
-      <div class="score">
-        <span>Jogos</span>
-        <strong><?= count($games) ?></strong>
-      </div>
-      <div class="score" style="border-top-color:var(--brand2);">
-        <span style="color:var(--muted);">Melhor Flappy</span>
-        <strong style="color:var(--brand2); text-shadow:0 0 10px var(--brand2);"><?= (int)($games[0]['best_score'] ?? 0) ?></strong>
-      </div>
-    </div>
-  </section>
-
-  <!-- Games list -->
-  <h2>Jogos disponíveis</h2>
-
-  <div class="grid">
-    <?php foreach($games as $game): ?>
-    <article class="card game-card">
-      <div class="led-bar"></div>
-      <div class="game-cover">
-        <img src="<?= htmlspecialchars($game['cover_url']) ?>" alt="">
-      </div>
-      <div class="game-body">
-        <h3><?= htmlspecialchars($game['title']) ?></h3>
-        <p class="muted"><?= htmlspecialchars($game['description']) ?></p>
-        <p>BEST: <strong><?= (int)$game['best_score'] ?></strong> &nbsp;|&nbsp; LAST: <strong><?= (int)$game['last_score'] ?></strong></p>
-        <a class="btn" href="<?= htmlspecialchars($game['game_url']) ?>">▶ Jogar</a>
-      </div>
-    </article>
-    <?php endforeach; ?>
-  </div>
-
-  <!-- Ranking -->
-  <h2>Ranking — Flappy Bird</h2>
-
-  <div class="panel" style="padding:0; overflow:hidden;">
-    <table class="rank-table">
-      <thead>
-        <tr>
-          <th style="width:60px;">#</th>
-          <th>Jogador</th>
-          <th style="text-align:right; padding-right:20px;">Melhor pontuação</th>
-        </tr>
-      </thead>
-      <tbody>
-        <?php foreach($ranking as $i => $r): ?>
-        <tr>
-          <td><?= ['🥇','🥈','🥉'][$i] ?? ($i+1) ?></td>
-          <td><?= htmlspecialchars($r['name']) ?></td>
-          <td style="text-align:right; padding-right:20px;"><?= (int)$r['best_score'] ?></td>
-        </tr>
-        <?php endforeach; ?>
-      </tbody>
-    </table>
-  </div>
-
-</main>
-
-</body>
-</html>
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>GameHub Educacional</title><link rel="stylesheet" href="/css/style.css"><style>
+.game-cover.fallback{display:grid;place-items:center;font-size:68px;background:radial-gradient(circle at 50% 30%,#182544,#080b13)}.game-cover img{width:100%;height:100%;object-fit:cover}.game-cover{height:165px;overflow:hidden}.game-body{display:flex;flex-direction:column;min-height:270px}.game-body .btn{margin-top:auto}.subject{display:inline-flex;width:max-content;padding:6px 9px;border-radius:999px;background:rgba(139,92,246,.13);border:1px solid rgba(139,92,246,.28);color:#cabfff;font-size:10px;font-family:var(--hud);letter-spacing:1px;text-transform:uppercase;margin:3px 0 10px}.skill{font-size:12px;color:var(--muted2);font-weight:700;line-height:1.45;margin-bottom:12px}.hero .panel p{max-width:700px}.edu-callout{margin-top:18px;padding:14px 16px;border:1px solid rgba(0,245,200,.2);border-radius:16px;background:rgba(0,245,200,.055);color:var(--muted);font-size:13px;line-height:1.55}.edu-callout strong{color:var(--brand)}
+</style></head><body>
+<div class="marquee-bar"><span class="marquee-inner">★ GAMEHUB EDUCACIONAL &nbsp;★ CONHECIMENTO + DIVERSÃO &nbsp;★ DESAFIOS PEDAGÓGICOS &nbsp;★ CRIATIVIDADE &nbsp;★ RACIOCÍNIO &nbsp;★ GAMEHUB EDUCACIONAL &nbsp;</span></div>
+<header class="topbar"><div class="brand"><span class="brand-icon">G</span><span class="brand-text">GameHub</span></div><div class="actions"><span><?=htmlspecialchars($userName)?></span><a class="btn secondary" href="?deslogar=1">Sair</a></div></header>
+<main class="container"><section class="hero"><div class="panel"><div style="font-family:var(--hud);font-size:9px;letter-spacing:2px;color:var(--brand)">// CENTRAL DE APRENDIZAGEM INTERATIVA</div><h1>GAME<br>HUB</h1><p class="muted">Uma única interface para aprender jogando. Cada jogo trabalha uma área do conhecimento e começa com um desafio pedagógico antes da diversão.</p><div class="status-pills"><span class="pill online">● <?=count($games)?> experiências educacionais</span><span class="pill scorepill">◆ Login integrado</span></div><div class="edu-callout"><strong>Como funciona:</strong> escolha um jogo → responda ao desafio educacional → o jogo é liberado centralizado dentro da mesma interface do GameHub.</div></div><div class="panel score-box" style="padding:20px">
+<div class="score"><span>🧠 PONTOS DE QI</span><strong style="color:var(--brand)"><?=$qiPoints?></strong><small style="color:var(--muted)">+10 por resposta correta após cada rodada</small></div>
+<div class="score" style="border-top-color:var(--brand2)"><span style="color:var(--muted)">🐦 JOÃO BIRD — JOGO PRINCIPAL</span><strong style="color:var(--brand2)"><?=$joaoBest?></strong><small style="color:var(--muted)">Seu recorde principal</small></div>
+</div></section>
+<h2>Experiências educacionais</h2><div class="grid">
+<?php foreach($games as $game): $e=$edu[$game['slug']]??null;if(!$e)continue; ?>
+<article class="card game-card"><div class="led-bar"></div><?php if(!empty($game['cover_url'])):?><div class="game-cover"><img src="<?=htmlspecialchars($game['cover_url'])?>" alt="<?=htmlspecialchars($e['title'])?>" onerror="this.parentNode.classList.add('fallback');this.remove();this.parentNode.textContent='<?=$e['icon']?>'"></div><?php else:?><div class="game-cover fallback"><?=$e['icon']?></div><?php endif;?><div class="game-body"><span class="subject"><?=htmlspecialchars($e['area'])?></span><h3><?=htmlspecialchars($e['title'])?></h3><div class="skill">🎯 <?=htmlspecialchars($e['skill'])?></div><p class="muted"><?=htmlspecialchars($e['mission'])?></p><?php if($game['slug']==='joao-bird'):?><p>BEST: <strong><?=(int)$game['best_score']?></strong> &nbsp;|&nbsp; LAST: <strong><?=(int)$game['last_score']?></strong></p><?php endif;?><a class="btn" href="/play.php?game=<?=urlencode($game['slug'])?>">▶ Iniciar missão</a></div></article>
+<?php endforeach;?></div>
+<h2>Ranking — João Bird</h2><div class="panel" style="padding:0;overflow:hidden"><table class="rank-table"><thead><tr><th style="width:60px">#</th><th>Aluno</th><th style="text-align:right;padding-right:20px">Melhor pontuação</th></tr></thead><tbody><?php if(!$ranking):?><tr><td colspan="3">Ainda não há pontuações.</td></tr><?php endif;?><?php foreach($ranking as $i=>$r):?><tr><td><?=['🥇','🥈','🥉'][$i]??($i+1)?></td><td><?=htmlspecialchars($r['name'])?></td><td style="text-align:right;padding-right:20px"><?=(int)$r['best_score']?></td></tr><?php endforeach;?></tbody></table></div></main></body></html>

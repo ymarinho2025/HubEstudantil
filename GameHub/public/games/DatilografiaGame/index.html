@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Corrida de Datilografia | GameHub</title><link rel="stylesheet" href="gamehub.css"></head>
+<body>
+
+<main class="wrap">
+<header><div><span class="eyebrow">GAMEHUB // TREINO</span><h1>Corrida de Datilografia</h1><p>Digite a frase exatamente como aparece. Velocidade e precisão valem pontos.</p></div>
+<div class="stats"><div><b id="score">0</b><span>PONTOS</span></div><div><b id="wpm">0</b><span>PPM</span></div><div><b id="accuracy">100%</b><span>PRECISÃO</span></div></div></header>
+<section class="game">
+<div class="progress"><i id="progress"></i></div>
+<div class="phase">FASE <span id="phase">1</span> / <span id="total"></span></div>
+<div id="phrase" class="phrase"></div>
+<textarea id="input" autocomplete="off" spellcheck="false" placeholder="Comece a digitar aqui..."></textarea>
+<div class="actions"><button id="start">▶ INICIAR / REINICIAR</button><span id="message">Pressione iniciar.</span></div>
+</section>
+<section class="tips"><b>Como jogar</b><span>⌨ Digite sem olhar para o teclado</span><span>⚡ Tente manter o ritmo</span><span>✓ Corrija erros antes de avançar</span></section>
+</main><script src="gamehub.js"></script></body></html>
