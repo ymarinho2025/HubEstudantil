@@ -4,123 +4,264 @@ require_once __DIR__ . '/config/auth.php';
 
 use Firebase\JWT\JWT;
 
+/*
+|--------------------------------------------------------------------------
+| USUÁRIO AUTENTICADO NO SGC
+|--------------------------------------------------------------------------
+*/
+
 $pdo = hub_pdo();
-$user = hub_require_user('/index.php', $pdo);
 
-$portalUrl = getenv('SSO_PORTAL_URL')
-    ?: 'https://hubestudantil.vercel.app';
+$user = hub_require_user(
+    '/index.php',
+    $pdo
+);
 
-$ssoToken = $_POST['sso_token'] ?? '';
+/*
+|--------------------------------------------------------------------------
+| DESTINO DO SSO
+|--------------------------------------------------------------------------
+|
+| Exemplos:
+|
+| /sso.php?target=games
+| /sso.php?target=atividades
+|
+*/
 
-if ($ssoToken === '') {
+$target = $_GET['target'] ?? '';
+
+$targets = [
+
+    'games' => getenv('GAMEHUB_URL')
+        ?: 'https://hubestudantil-games.vercel.app',
+
+    'atividades' => getenv('ACTIVITIES_URL')
+        ?: 'https://hubestudantil-atividades.vercel.app',
+
+];
+
+/*
+|--------------------------------------------------------------------------
+| VALIDA DESTINO
+|--------------------------------------------------------------------------
+*/
+
+if (!isset($targets[$target])) {
+
     http_response_code(400);
-    exit('Token SSO não recebido.');
+
+    exit('Destino SSO inválido.');
 }
 
-try {
+/*
+|--------------------------------------------------------------------------
+| CHAVE JWT
+|--------------------------------------------------------------------------
+|
+| hub_jwt_key() já utiliza o JWT_SECRET configurado no SGC.
+|
+*/
 
-    $secret = gamehub_jwt_secret();
+$secret = hub_jwt_key();
 
-    $payload = JWT::decode(
-        $ssoToken,
-        new Key($secret, 'HS256')
-    );
+/*
+|--------------------------------------------------------------------------
+| CRIA TOKEN SSO TEMPORÁRIO
+|--------------------------------------------------------------------------
+|
+| Esse token dura somente 60 segundos.
+|
+*/
 
-    /*
-    |--------------------------------------------------------------------------
-    | Validação do token SSO
-    |--------------------------------------------------------------------------
-    */
+$now = time();
 
-    if (($payload->type ?? '') !== 'hub_sso') {
-        throw new RuntimeException(
-            'Tipo de token inválido: ' .
-            ($payload->type ?? 'ausente')
-        );
-    }
+$payload = [
 
-    if (
-        ($payload->iss ?? '') !==
-        'https://hubestudantil.vercel.app'
-    ) {
-        throw new RuntimeException(
-            'Emissor SSO inválido.'
-        );
-    }
+    'iss' => 'https://hubestudantil.vercel.app',
 
-    if (($payload->aud ?? '') !== 'games') {
-        throw new RuntimeException(
-            'Token não destinado ao GameHub.'
-        );
-    }
+    'aud' => $target,
 
-    $userId = (int)($payload->id ?? $payload->sub ?? 0);
+    'iat' => $now,
 
-    if ($userId <= 0) {
-        throw new RuntimeException(
-            'ID do usuário ausente no token.'
-        );
-    }
+    'nbf' => $now,
 
-    /*
-    |--------------------------------------------------------------------------
-    | Busca o usuário real no banco
-    |--------------------------------------------------------------------------
-    */
+    'exp' => $now + 60,
 
-    $pdo = gamehub_pdo();
+    'type' => 'hub_sso',
 
-    $stmt = $pdo->prepare(
-        'SELECT id, name, email, roles
-         FROM users
-         WHERE id = :id
-         LIMIT 1'
-    );
+    'sub' => (string)($user['id'] ?? ''),
 
-    $stmt->execute([
-        ':id' => $userId
-    ]);
+    'id' => (int)($user['id'] ?? 0),
 
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    'name' => (string)($user['name'] ?? ''),
 
-    if (!$user) {
-        throw new RuntimeException(
-            'Usuário não encontrado no banco.'
-        );
-    }
+    'email' => (string)($user['email'] ?? ''),
 
-    /*
-    |--------------------------------------------------------------------------
-    | Usa a própria função oficial do GameHub
-    |--------------------------------------------------------------------------
-    */
+    'roles' => (int)($user['roles'] ?? 1),
+];
 
-    gamehub_issue_cookie($user);
+/*
+|--------------------------------------------------------------------------
+| CONFERE USUÁRIO
+|--------------------------------------------------------------------------
+*/
 
-    /*
-    |--------------------------------------------------------------------------
-    | Redireciona já autenticado
-    |--------------------------------------------------------------------------
-    */
+if ($payload['id'] <= 0) {
 
-    header('Location: /home.php');
-    exit;
+    http_response_code(401);
 
-} catch (Throwable $e) {
-
-    http_response_code(500);
-
-    echo '<h2>Erro SSO GameHub</h2>';
-
-    echo '<pre>';
-
-    echo htmlspecialchars(
-        $e->getMessage(),
-        ENT_QUOTES,
-        'UTF-8'
-    );
-
-    echo '</pre>';
-
-    exit;
+    exit('Usuário autenticado inválido.');
 }
+
+/*
+|--------------------------------------------------------------------------
+| GERA JWT
+|--------------------------------------------------------------------------
+*/
+
+$ssoToken = JWT::encode(
+    $payload,
+    $secret,
+    'HS256'
+);
+
+/*
+|--------------------------------------------------------------------------
+| URL DO CALLBACK
+|--------------------------------------------------------------------------
+*/
+
+$callback = rtrim(
+    $targets[$target],
+    '/'
+) . '/sso-callback.php';
+
+?>
+<!doctype html>
+
+<html lang="pt-BR">
+
+<head>
+
+<meta charset="utf-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+>
+
+<title>HubEstudantil | Entrando</title>
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-family: Arial, sans-serif;
+
+    background: #f5f7fb;
+    color: #172033;
+}
+
+.box {
+    width: 320px;
+
+    background: #ffffff;
+
+    border: 1px solid #e4e7ec;
+    border-radius: 18px;
+
+    padding: 35px;
+
+    text-align: center;
+
+    box-shadow:
+        0 8px 24px
+        rgba(16,24,40,.08);
+}
+
+.loader {
+    width: 40px;
+    height: 40px;
+
+    margin: 22px auto;
+
+    border: 4px solid #e4e7ec;
+
+    border-top-color: #3157d5;
+
+    border-radius: 50%;
+
+    animation:
+        spin .8s linear infinite;
+}
+
+@keyframes spin {
+
+    to {
+        transform: rotate(360deg);
+    }
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="box">
+
+    <h2>HubEstudantil</h2>
+
+    <div class="loader"></div>
+
+    <p>
+        Entrando automaticamente...
+    </p>
+
+    <form
+        id="ssoForm"
+        method="POST"
+        action="<?= htmlspecialchars(
+            $callback,
+            ENT_QUOTES,
+            'UTF-8'
+        ) ?>"
+    >
+
+        <input
+            type="hidden"
+            name="sso_token"
+            value="<?= htmlspecialchars(
+                $ssoToken,
+                ENT_QUOTES,
+                'UTF-8'
+            ) ?>"
+        >
+
+    </form>
+
+</div>
+
+<script>
+
+document
+    .getElementById('ssoForm')
+    .submit();
+
+</script>
+
+</body>
+
+</html>
