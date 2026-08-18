@@ -2,8 +2,8 @@
 require_once dirname(__DIR__) . '/config/auth.php';
 $pdo = hub_pdo();
 $user = hub_require_user('/index.php', $pdo);
-$activitiesUrl = rtrim((string)(getenv('ACTIVITIES_URL') ?: 'https://hub-estudantil-atividades.vercel.app'), '/') . '/home.php';
-$gamehubUrl = rtrim((string)(getenv('GAMEHUB_URL') ?: 'https://hub-estudantil-games.vercel.app'), '/') . '/home.php';
+$activitiesUrl = rtrim((string)(getenv('ACTIVITIES_URL') ?: 'https://hubestudantil-atividades.vercel.app'), '/') . '/home.php';
+$gamehubUrl = rtrim((string)(getenv('GAMEHUB_URL') ?: 'https://hubestudantil-games.vercel.app'), '/') . '/home.php';
 
 if (isset($_GET['logout'])) {
     hub_clear_auth_cookie();
@@ -33,13 +33,14 @@ h1{font-size:42px;margin-bottom:10px}.grid{display:grid;grid-template-columns:re
  <div class="user">Olá, <?= htmlspecialchars($user['name']) ?> · <a href="?logout=1">Sair</a></div>
 </header>
 <main>
-<section class="hero"><h1>Portal HubEstudantil</h1><p>O mesmo login dá acesso aos módulos integrados.</p></section>
-<section class="grid">
-<div class="card"><h2>🏠 SGC</h2><p>Recursos e páginas do Sistema de Gestão de Clubes.</p><a class="btn" href="/home/">Painel SGC</a></div>
-<div class="card"><h2>📚 Atividades</h2><p>Envio, acompanhamento e recursos acadêmicos do PHP-web-app.</p><a class="btn" id="activitiesLink" href="<?= htmlspecialchars($activitiesUrl, ENT_QUOTES, 'UTF-8') ?>">Acessar atividades</a></div>
-<div class="card"><h2>🎮 GameHub</h2><p>Aprendizagem por jogos, pontuações e ranking usando a mesma conta.</p><a class="btn" id="gameLink" href="<?= htmlspecialchars($gamehubUrl, ENT_QUOTES, 'UTF-8') ?>">Aprender jogando</a></div>
+<section class="hero">
+    <h1>HubEstudantil</h1>
+    <p>Escolha uma das opções abaixo para continuar.</p>
 </section>
-<div class="note"><b>Login único:</b> o cookie <code>auth_token</code> é usado pelos três módulos no mesmo host.</div>
+<section class="grid">
+<div class="card"><h2>📚 Atividades</h2><p>Envio, acompanhamento e recursos acadêmicos.</p><a class="btn" id="activitiesLink" href="<?= htmlspecialchars($activitiesUrl, ENT_QUOTES, 'UTF-8') ?>">Acessar atividades</a></div>
+<div class="card"><h2>🎮 GameHub</h2><p>Aprendizagem por jogos, pontuações e ranking.</p><a class="btn" id="gameLink" href="<?= htmlspecialchars($gamehubUrl, ENT_QUOTES, 'UTF-8') ?>">Aprender jogando</a></div>
+</section>
 </main>
 <script>
 (function(){
