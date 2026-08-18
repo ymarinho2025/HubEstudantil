@@ -2,5 +2,9 @@
 **/.env
 .env.local
 **/.env.local
+
+vendor/
+**/vendor/
+
 .DS_Store
 Thumbs.db
