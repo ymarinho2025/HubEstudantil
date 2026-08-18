@@ -242,10 +242,59 @@ function draw() {
     if (!scoreSaved) {
       scoreSaved = true;
       fetch("/api/flappy/pontuacao.php", {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({score})
-      }).catch(() => {});
+    method: "POST",
+
+    headers: {
+        "Content-Type": "application/json"
+    },
+
+    body: JSON.stringify({
+        score: Number(score)
+    })
+
+})
+.then(async response => {
+
+    const text = await response.text();
+
+    let data;
+
+    try {
+        data = JSON.parse(text);
+    } catch (e) {
+
+        console.error(
+            "Resposta inválida da API:",
+            text
+        );
+
+        return;
+    }
+
+    if (!response.ok || !data.ok) {
+
+        console.error(
+            "Erro ao salvar pontuação:",
+            data
+        );
+
+        return;
+    }
+
+    console.log(
+        "Pontuação salva:",
+        data
+    );
+
+})
+.catch(error => {
+
+    console.error(
+        "Falha ao enviar pontuação:",
+        error
+    );
+
+});
     }
     ctx.fillStyle = "rgba(0,0,0,0.5)";
     ctx.fillRect(0, SCREEN_HEIGHT / 2 - 85, SCREEN_WIDTH, 150);

@@ -33,7 +33,26 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
     $points=(int)$st->fetchColumn();
     $pdo->commit();
     echo json_encode(['ok'=>true,'added'=>10,'points'=>$points]);
-  }catch(Throwable $e){$pdo->rollBack();http_response_code(500);echo json_encode(['ok'=>false]);}
+  }catch (Throwable $e) {
+
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
+
+    error_log(
+        'Erro QI: ' .
+        $e->getMessage()
+    );
+
+    http_response_code(500);
+
+    echo json_encode([
+        'ok' => false,
+        'erro' => $e->getMessage()
+    ]);
+
+    exit;
+}
   exit;
 }
 $st=$pdo->prepare("SELECT points FROM qi_points WHERE user_id=:u");
