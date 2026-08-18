@@ -63,6 +63,16 @@ try {
 
 } catch (Throwable $e) {
 
-    header('Location: https://hubestudantil.vercel.app');
+    error_log(
+        'Erro SSO GameHub: ' .
+        $e->getMessage()
+    );
+
+    header(
+        'Location: ' .
+        $portalUrl .
+        '/index.php'
+    );
+
     exit;
 }
