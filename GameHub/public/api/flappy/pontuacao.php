@@ -1,280 +1,201 @@
 <?php
 
-require_once __DIR__ . '/../../../src/Controllers/login/auth.php';
-
 header('Content-Type: application/json; charset=utf-8');
+
+require_once __DIR__ . '/../../../config/auth.php';
+
+$pdo = gamehub_pdo();
+
+$user = gamehub_require_user(
+    '/login.php',
+    $pdo
+);
+
+$uid = (int)($user['id'] ?? 0);
+
+if ($uid <= 0) {
+
+    http_response_code(401);
+
+    echo json_encode([
+        'ok' => false,
+        'erro' => 'Usuário não autenticado.'
+    ]);
+
+    exit;
+}
+
+/*
+|--------------------------------------------------------------------------
+| JOÃO BIRD
+|--------------------------------------------------------------------------
+*/
+
+$gameSlug = 'joao-bird';
+
+$stmt = $pdo->prepare("
+    SELECT id
+    FROM games
+    WHERE slug = :slug
+      AND active = TRUE
+    LIMIT 1
+");
+
+$stmt->execute([
+    ':slug' => $gameSlug
+]);
+
+$game = $stmt->fetch(PDO::FETCH_ASSOC);
+
+if (!$game) {
+
+    http_response_code(404);
+
+    echo json_encode([
+        'ok' => false,
+        'erro' => 'João Bird não encontrado na tabela games.'
+    ]);
+
+    exit;
+}
+
+$gameId = (int)$game['id'];
+
+/*
+|--------------------------------------------------------------------------
+| GET
+|--------------------------------------------------------------------------
+*/
+
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+
+    $stmt = $pdo->prepare("
+        SELECT
+            best_score,
+            last_score,
+            updated_at
+
+        FROM game_scores
+
+        WHERE user_id = :u
+          AND game_id = :g
+
+        LIMIT 1
+    ");
+
+    $stmt->execute([
+        ':u' => $uid,
+        ':g' => $gameId
+    ]);
+
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    echo json_encode([
+        'ok' => true,
+
+        'bestScore' =>
+            (int)($row['best_score'] ?? 0),
+
+        'lastScore' =>
+            (int)($row['last_score'] ?? 0),
+
+        'updatedAt' =>
+            $row['updated_at'] ?? null
+    ]);
+
+    exit;
+}
+
+/*
+|--------------------------------------------------------------------------
+| POST
+|--------------------------------------------------------------------------
+*/
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+
+    http_response_code(405);
+
+    echo json_encode([
+        'ok' => false,
+        'erro' => 'Método não permitido.'
+    ]);
+
+    exit;
+}
+
+/*
+|--------------------------------------------------------------------------
+| RECEBE SCORE
+|--------------------------------------------------------------------------
+*/
+
+$input = json_decode(
+    file_get_contents('php://input'),
+    true
+);
+
+if (!is_array($input)) {
+    $input = [];
+}
+
+if (!isset($input['score'])) {
+
+    http_response_code(400);
+
+    echo json_encode([
+        'ok' => false,
+        'erro' => 'Pontuação não recebida.'
+    ]);
+
+    exit;
+}
+
+$score = filter_var(
+    $input['score'],
+    FILTER_VALIDATE_INT
+);
+
+if (
+    $score === false ||
+    $score < 0 ||
+    $score > 999999
+) {
+
+    http_response_code(400);
+
+    echo json_encode([
+        'ok' => false,
+        'erro' => 'Pontuação inválida.'
+    ]);
+
+    exit;
+}
+
+/*
+|--------------------------------------------------------------------------
+| SALVA PONTUAÇÃO PRINCIPAL
+|--------------------------------------------------------------------------
+|
+| Sem transação compartilhada com histórico.
+|
+*/
 
 try {
 
-    /*
-    |--------------------------------------------------------------------------
-    | Usuário autenticado
-    |--------------------------------------------------------------------------
-    */
-
-    $uid = (int)($authUser['id'] ?? 0);
-
-    if ($uid <= 0) {
-        http_response_code(401);
-
-        echo json_encode([
-            'ok' => false,
-            'erro' => 'Usuário não autenticado.'
-        ]);
-
-        exit;
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Jogo principal
-    |--------------------------------------------------------------------------
-    */
-
-    $gameSlug = 'joao-bird';
-
-    $stmt = $pdo->prepare(
-        'SELECT id
-         FROM games
-         WHERE slug = :slug
-         LIMIT 1'
-    );
-
-    $stmt->execute([
-        ':slug' => $gameSlug
-    ]);
-
-    $game = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    /*
-    |--------------------------------------------------------------------------
-    | Se João Bird ainda não existir no banco, cria
-    |--------------------------------------------------------------------------
-    */
-
-    if (!$game) {
-
-        $stmt = $pdo->prepare(
-            "INSERT INTO games
-            (
-                slug,
-                title,
-                description,
-                cover_url,
-                game_url,
-                active
-            )
-            VALUES
-            (
-                :slug,
-                :title,
-                :description,
-                :cover,
-                :url,
-                TRUE
-            )
-            ON CONFLICT (slug)
-            DO UPDATE SET
-                active = TRUE
-            RETURNING id"
-        );
-
-        $stmt->execute([
-            ':slug' => 'joao-bird',
-            ':title' => 'João Bird',
-            ':description' =>
-                'Jogo educacional principal do GameHub.',
-            ':cover' => '/games/JoaoBird/bg.png',
-            ':url' => '/play.php?game=joao-bird'
-        ]);
-
-        $game = $stmt->fetch(PDO::FETCH_ASSOC);
-    }
-
-    if (!$game) {
-        throw new RuntimeException(
-            'Não foi possível localizar ou criar João Bird.'
-        );
-    }
-
-    $gameId = (int)$game['id'];
-
-    /*
-    |--------------------------------------------------------------------------
-    | CONSULTA
-    |--------------------------------------------------------------------------
-    */
-
-    if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-
-        $stmt = $pdo->prepare(
-            'SELECT
-                best_score,
-                last_score,
-                updated_at
-             FROM game_scores
-             WHERE user_id = :user
-               AND game_id = :game
-             LIMIT 1'
-        );
-
-        $stmt->execute([
-            ':user' => $uid,
-            ':game' => $gameId
-        ]);
-
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        echo json_encode([
-            'ok' => true,
-            'bestScore' =>
-                (int)($row['best_score'] ?? 0),
-
-            'lastScore' =>
-                (int)($row['last_score'] ?? 0),
-
-            'updatedAt' =>
-                $row['updated_at'] ?? null
-        ]);
-
-        exit;
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Somente POST para gravar
-    |--------------------------------------------------------------------------
-    */
-
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-
-        http_response_code(405);
-
-        echo json_encode([
-            'ok' => false,
-            'erro' => 'Método não permitido.'
-        ]);
-
-        exit;
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | RECEBE PONTUAÇÃO
-    |--------------------------------------------------------------------------
-    */
-
-    $input = json_decode(
-        file_get_contents('php://input'),
-        true
-    );
-
-    if (!is_array($input)) {
-        $input = [];
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Converte para inteiro
-    |--------------------------------------------------------------------------
-    |
-    | Na versão antiga havia:
-    |
-    | is_int($score)
-    |
-    | Isso pode ser excessivamente rígido dependendo de como
-    | o JSON chega.
-    |
-    */
-
-    if (!isset($input['score'])) {
-
-        http_response_code(400);
-
-        echo json_encode([
-            'ok' => false,
-            'erro' => 'Pontuação não recebida.'
-        ]);
-
-        exit;
-    }
-
-    $score = filter_var(
-        $input['score'],
-        FILTER_VALIDATE_INT
-    );
-
-    if (
-        $score === false ||
-        $score < 0 ||
-        $score > 999999
-    ) {
-
-        http_response_code(400);
-
-        echo json_encode([
-            'ok' => false,
-            'erro' => 'Pontuação inválida.'
-        ]);
-
-        exit;
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | GRAVA
-    |--------------------------------------------------------------------------
-    */
-
-    $pdo->beginTransaction();
-
-    /*
-    |--------------------------------------------------------------------------
-    | Histórico
-    |--------------------------------------------------------------------------
-    */
-
-    $stmt = $pdo->prepare(
-        'INSERT INTO game_score_history
-        (
-            user_id,
-            game_id,
-            score
-        )
-        VALUES
-        (
-            :user,
-            :game,
-            :score
-        )'
-    );
-
-    $stmt->execute([
-        ':user' => $uid,
-        ':game' => $gameId,
-        ':score' => $score
-    ]);
-
-    /*
-    |--------------------------------------------------------------------------
-    | Melhor pontuação e última pontuação
-    |--------------------------------------------------------------------------
-    */
-
-    $stmt = $pdo->prepare(
-        'INSERT INTO game_scores
-        (
+    $stmt = $pdo->prepare("
+        INSERT INTO game_scores (
             user_id,
             game_id,
             best_score,
             last_score
         )
-        VALUES
-        (
-            :user,
-            :game,
-            :score,
-            :score
+
+        VALUES (
+            :u,
+            :g,
+            :s,
+            :s
         )
 
         ON CONFLICT (user_id, game_id)
@@ -296,52 +217,21 @@ try {
         RETURNING
             best_score,
             last_score,
-            updated_at'
-    );
+            updated_at
+    ");
 
     $stmt->execute([
-        ':user' => $uid,
-        ':game' => $gameId,
-        ':score' => $score
+        ':u' => $uid,
+        ':g' => $gameId,
+        ':s' => $score
     ]);
 
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    $pdo->commit();
-
-    /*
-    |--------------------------------------------------------------------------
-    | RESPOSTA
-    |--------------------------------------------------------------------------
-    */
-
-    echo json_encode([
-        'ok' => true,
-
-        'bestScore' =>
-            (int)$row['best_score'],
-
-        'lastScore' =>
-            (int)$row['last_score'],
-
-        'updatedAt' =>
-            $row['updated_at']
-    ]);
-
-    exit;
-
 } catch (Throwable $e) {
 
-    if (
-        isset($pdo) &&
-        $pdo instanceof PDO &&
-        $pdo->inTransaction()
-    ) {
-        $pdo->rollBack();
-    }
-
     error_log(
-        'Erro pontuação João Bird: ' .
+        'ERRO SCORE JOAO BIRD: ' .
         $e->getMessage()
     );
 
@@ -349,13 +239,80 @@ try {
 
     echo json_encode([
         'ok' => false,
-
-        /*
-         * TEMPORÁRIO para diagnóstico.
-         * Depois podemos retirar o detalhe.
-         */
         'erro' => $e->getMessage()
     ]);
 
     exit;
 }
+
+/*
+|--------------------------------------------------------------------------
+| HISTÓRICO
+|--------------------------------------------------------------------------
+|
+| Falha no histórico NÃO elimina o recorde.
+|
+*/
+
+$historySaved = true;
+$historyError = null;
+
+try {
+
+    $stmt = $pdo->prepare("
+        INSERT INTO game_score_history (
+            user_id,
+            game_id,
+            score
+        )
+
+        VALUES (
+            :u,
+            :g,
+            :s
+        )
+    ");
+
+    $stmt->execute([
+        ':u' => $uid,
+        ':g' => $gameId,
+        ':s' => $score
+    ]);
+
+} catch (Throwable $e) {
+
+    $historySaved = false;
+    $historyError = $e->getMessage();
+
+    error_log(
+        'ERRO HISTORICO JOAO BIRD: ' .
+        $historyError
+    );
+}
+
+/*
+|--------------------------------------------------------------------------
+| RESPOSTA
+|--------------------------------------------------------------------------
+*/
+
+echo json_encode([
+    'ok' => true,
+
+    'bestScore' =>
+        (int)$row['best_score'],
+
+    'lastScore' =>
+        (int)$row['last_score'],
+
+    'updatedAt' =>
+        $row['updated_at'],
+
+    'historySaved' =>
+        $historySaved,
+
+    'historyError' =>
+        $historyError
+]);
+
+exit;
