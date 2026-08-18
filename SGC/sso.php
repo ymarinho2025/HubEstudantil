@@ -1,9 +1,11 @@
 <?php
 
-require_once __DIR__ . '/../config/auth.php';
+require_once __DIR__ . '/config/auth.php';
 
 use Firebase\JWT\JWT;
-use Firebase\JWT\Key;
+
+$pdo = hub_pdo();
+$user = hub_require_user('/index.php', $pdo);
 
 $portalUrl = getenv('SSO_PORTAL_URL')
     ?: 'https://hubestudantil.vercel.app';
