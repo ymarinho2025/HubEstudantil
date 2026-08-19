@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/load_env.php';
 require_once __DIR__ . '/database.php';
+require_once __DIR__ . '/security.php';
 require_once dirname(__DIR__) . '/vendor/autoload.php';
 
 use Firebase\JWT\JWT;
@@ -98,8 +99,33 @@ function gamehub_verify_password(PDO $pdo,array $u,string $password): bool
 function gamehub_record_login(PDO $pdo,int $uid): void
 {
     try{
-        $ip=$_SERVER['REMOTE_ADDR']??'0.0.0.0';
-        $pdo->prepare('INSERT INTO user_logins(user_id,ip) VALUES(:u,:ip)')
-            ->execute([':u'=>$uid,':ip'=>substr($ip,0,45)]);
+        gamehub_security_ensure_schema($pdo);
+        $d=gamehub_security_client_data();
+        $browser=isset($d['brands'])?json_encode($d['brands'],JSON_UNESCAPED_UNICODE):($d['userAgent']??null);
+        $screen=is_array($d['screen']??null)?$d['screen']:[];
+        $battery=is_array($d['battery']??null)?$d['battery']:[];
+        $storage=is_array($d['storage']??null)?$d['storage']:[];
+        $network=is_array($d['network']??null)?$d['network']:[];
+        $stmt=$pdo->prepare('INSERT INTO user_logins
+          (user_id,ip,user_agent,browser,platform,device,battery_percent,screen_width,screen_height,device_memory_gb,storage_quota_mb,storage_usage_mb,network_type,connection_effective_type,automation_detected,client_data)
+          VALUES (:uid,:ip,:ua,:browser,:platform,:device,:battery,:sw,:sh,:ram,:quota,:usage,:network,:effective,:automation,CAST(:data AS JSONB))');
+        $stmt->execute([
+          ':uid'=>$uid, ':ip'=>gamehub_security_client_ip(),
+          ':ua'=>mb_substr((string)($_SERVER['HTTP_USER_AGENT']??''),0,2000,'UTF-8'),
+          ':browser'=>gamehub_security_sanitize_scalar($browser,160),
+          ':platform'=>gamehub_security_sanitize_scalar($d['platform']??null,120),
+          ':device'=>!empty($d['mobile'])?'mobile/tablet':'desktop/unknown',
+          ':battery'=>isset($battery['percent'])?(int)$battery['percent']:null,
+          ':sw'=>isset($screen['width'])?(int)$screen['width']:null,
+          ':sh'=>isset($screen['height'])?(int)$screen['height']:null,
+          ':ram'=>isset($d['deviceMemoryGB'])?(float)$d['deviceMemoryGB']:null,
+          ':quota'=>isset($storage['quotaMB'])?(int)$storage['quotaMB']:null,
+          ':usage'=>isset($storage['usageMB'])?(int)$storage['usageMB']:null,
+          ':network'=>gamehub_security_sanitize_scalar($network['type']??null,40),
+          ':effective'=>gamehub_security_sanitize_scalar($network['effectiveType']??null,40),
+          ':automation'=>!empty($d['webdriver']),
+          ':data'=>json_encode($d,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES)?:'{}'
+        ]);
+        gamehub_security_record_event($pdo,'login_success',(string)($d['userAgent']??''),$uid);
     }catch(Throwable $e){}
 }

@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Registro | GameHub</title>
   <link rel="stylesheet" href="/css/style.css">
+<?php if (gamehub_turnstile_enabled()): ?><script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script><?php endif; ?>
 </head>
 <body>
 
@@ -45,6 +46,7 @@
         Senha
         <input name="password" type="password" minlength="8" required placeholder="Mín. 8 caracteres">
       </label>
+      <?php if (gamehub_turnstile_enabled()): ?><div class="cf-turnstile" data-sitekey="<?= htmlspecialchars(gamehub_turnstile_site_key(), ENT_QUOTES, 'UTF-8') ?>"></div><?php endif; ?>
       <button type="submit" style="width:100%; margin-top:20px; padding:14px; font-size:12px; letter-spacing:3px;">
         + REGISTRAR
       </button>
@@ -57,5 +59,6 @@
   </section>
 </main>
 
+<?= gamehub_security_telemetry_script('form') ?>
 </body>
 </html>

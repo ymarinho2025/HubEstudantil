@@ -9,7 +9,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nome = trim($_POST['name'] ?? '');
     $senha = $_POST['password'] ?? '';
 
-    if ($email==='' || $nome==='' || $senha==='') $mensagem='Todos os campos são obrigatórios.';
+    if (hub_security_is_rate_limited($pdo, $email)) {
+        hub_security_record_event($pdo, 'register_rate_limited', $email);
+        $mensagem='Muitas tentativas. Aguarde alguns minutos e tente novamente.';
+    } elseif (!hub_turnstile_verify()) {
+        hub_security_record_event($pdo, 'register_failed', $email);
+        $mensagem='Verificação anti-bot não concluída.';
+    } elseif ($email==='' || $nome==='' || $senha==='') $mensagem='Todos os campos são obrigatórios.';
     elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) $mensagem='Email inválido.';
     elseif (mb_strlen($nome)<2 || mb_strlen($nome)>50) $mensagem='O nome deve ter entre 2 e 50 caracteres.';
     elseif (strlen($senha)<8) $mensagem='A senha deve conter no mínimo 8 caracteres.';
@@ -29,6 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ':password'=>password_hash($senha, PASSWORD_DEFAULT)
             ]);
             $user=$stmt->fetch(PDO::FETCH_ASSOC);
+            hub_security_record_event($pdo, 'register_success', $email, (int)$user['id']);
             hub_issue_auth_cookie($user);
             hub_record_login($pdo, (int)$user['id']);
             header('Location: /home.php');

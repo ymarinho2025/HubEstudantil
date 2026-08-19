@@ -1,3 +1,6 @@
 DATABASE_URL=...
 JWT_SECRET=...
 SSO_PORTAL_URL=https://hubestudantil.vercel.app
+# Anti-bot Cloudflare Turnstile (recomendado em produção)
+TURNSTILE_SITE_KEY=
+TURNSTILE_SECRET_KEY=
