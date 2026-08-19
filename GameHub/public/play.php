@@ -3,6 +3,7 @@ $pdo=require __DIR__.'/../src/db.php';
 require_once __DIR__.'/../config/auth.php';
 require_once __DIR__.'/../src/educational_catalog.php';
 $user=gamehub_require_user('/login.php',$pdo);
+$user=gamehub_require_nickname($user);
 $catalog=gamehub_educational_catalog();
 $slug=$_GET['game']??'';
 if(!isset($catalog[$slug])){http_response_code(404);echo 'Jogo não encontrado.';exit;}
@@ -25,7 +26,7 @@ $questions=$game['questions'];
 </head>
 <body class="edu-shell">
 <div class="marquee-bar"><span class="marquee-inner">★ GAMEHUB EDUCACIONAL &nbsp;★ APRENDER JOGANDO &nbsp;★ <?=htmlspecialchars(mb_strtoupper($game['area']))?> &nbsp;★ DESAFIO PEDAGÓGICO &nbsp;★ GAMEHUB EDUCACIONAL &nbsp;</span></div>
-<header class="topbar"><div class="brand"><span class="brand-icon">G</span><span class="brand-text">GameHub</span></div><div class="actions"><span><?=htmlspecialchars($user['name'] ?? 'Aluno')?></span><a class="btn secondary" href="/home.php">← Jogos</a></div></header>
+<header class="topbar"><div class="brand"><span class="brand-icon">G</span><span class="brand-text">GameHub</span></div><div class="actions"><span><?=htmlspecialchars($user['nickname'] ?? 'Aluno')?></span><a class="btn secondary" href="/home.php">← Jogos</a></div></header>
 <main class="edu-main">
 <section class="edu-head"><div><div class="edu-kicker">// MISSÃO EDUCACIONAL</div><h1 class="edu-title"><?=$game['icon']?> <?=htmlspecialchars($game['title'])?></h1><div class="edu-meta"><span class="edu-badge">📘 <?=htmlspecialchars($game['area'])?></span><span class="edu-badge">🎯 <?=htmlspecialchars($game['skill'])?></span></div></div><button id="newChallengeTop" class="btn secondary">Novo desafio</button></section>
 <section class="edu-layout">

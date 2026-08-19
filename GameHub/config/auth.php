@@ -34,6 +34,34 @@ function gamehub_clear_cookie(): void
     setcookie('auth_token','',gamehub_cookie_options(time()-3600));
     unset($_COOKIE['auth_token']);
 }
+function gamehub_ensure_nickname_schema(PDO $pdo): void
+{
+    static $done = false;
+    if ($done) return;
+
+    $pdo->exec('ALTER TABLE users ADD COLUMN IF NOT EXISTS nickname VARCHAR(15)');
+    $pdo->exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_nickname_unique_ci ON users (LOWER(nickname)) WHERE nickname IS NOT NULL");
+    $done = true;
+}
+
+function gamehub_valid_nickname(string $nickname): bool
+{
+    $length = mb_strlen($nickname, 'UTF-8');
+    if ($length < 3 || $length > 15) return false;
+
+    // Somente letras Unicode, números e underscore. Bloqueia espaços, emojis e símbolos.
+    return preg_match('/^[\\p{L}\\p{N}_]+$/u', $nickname) === 1;
+}
+
+function gamehub_require_nickname(array $user, string $redirect='/nickname.php'): array
+{
+    if (trim((string)($user['nickname'] ?? '')) === '') {
+        header('Location: '.$redirect);
+        exit;
+    }
+    return $user;
+}
+
 function gamehub_current_user(?PDO $pdo=null): ?array
 {
     $token=$_COOKIE['auth_token']??'';
@@ -41,7 +69,8 @@ function gamehub_current_user(?PDO $pdo=null): ?array
     try{
         $d=JWT::decode($token,new Key(gamehub_jwt_secret(),'HS256'));
         $pdo=$pdo?:gamehub_pdo();
-        $s=$pdo->prepare('SELECT id,name,email,roles FROM users WHERE id=:id LIMIT 1');
+        gamehub_ensure_nickname_schema($pdo);
+        $s=$pdo->prepare('SELECT id,name,nickname,email,roles FROM users WHERE id=:id LIMIT 1');
         $s->execute([':id'=>(int)$d->id]);
         return $s->fetch() ?: null;
     }catch(Throwable $e){

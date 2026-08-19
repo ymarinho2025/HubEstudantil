@@ -34,8 +34,8 @@
 
     <form method="post" style="margin-top:20px;">
       <label class="field">
-        Nome do Jogador
-        <input name="name" required maxlength="50" placeholder="SeuNickname">
+        Nome completo
+        <input name="name" required maxlength="50" placeholder="Seu nome">
       </label>
       <label class="field">
         Email

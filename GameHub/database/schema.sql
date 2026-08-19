@@ -1,11 +1,18 @@
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     name VARCHAR(50) NOT NULL,
+    nickname VARCHAR(15),
     email VARCHAR(100) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
     roles INT DEFAULT 1,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Nickname público e único do GameHub. Usuários antigos ficam com NULL até escolherem um.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS nickname VARCHAR(15);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_nickname_unique_ci
+ON users (LOWER(nickname))
+WHERE nickname IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS user_logins (
     id SERIAL PRIMARY KEY,
