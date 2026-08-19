@@ -144,22 +144,27 @@ class Pipe {
 class Floor {
   constructor(y) {
     this.y = y;
-    this.x1 = 0;
-    this.x2 = FLOOR_TILE_W;
+    this.offsetX = 0;
     this.speed = 5;
   }
 
   move() {
-    this.x1 -= this.speed;
-    this.x2 -= this.speed;
-    if (this.x1 + FLOOR_TILE_W < 0) this.x1 = this.x2 + FLOOR_TILE_W;
-    if (this.x2 + FLOOR_TILE_W < 0) this.x2 = this.x1 + FLOOR_TILE_W;
+    // Mantém um único deslocamento circular. Assim não existe troca de
+    // posição entre x1/x2 capaz de deixar uma faixa do canvas descoberta.
+    this.offsetX -= this.speed;
+
+    if (this.offsetX <= -FLOOR_TILE_W) {
+      this.offsetX += FLOOR_TILE_W;
+    }
   }
 
   draw() {
-    ctx.drawImage(floorImage, this.x1, this.y, FLOOR_TILE_W, FLOOR_H);
-    ctx.drawImage(floorImage, this.x2, this.y, FLOOR_TILE_W, FLOOR_H);
-    ctx.drawImage(floorImage, this.x1 + FLOOR_TILE_W * 2, this.y, FLOOR_TILE_W, FLOOR_H);
+    // offsetX permanece sempre entre -FLOOR_TILE_W e 0.
+    // Desenhamos tiles consecutivos até ultrapassar toda a largura do canvas.
+    // O +1 evita qualquer microfenda visual na junção causada por rasterização.
+    for (let x = this.offsetX; x < SCREEN_WIDTH; x += FLOOR_TILE_W) {
+      ctx.drawImage(floorImage, x, this.y, FLOOR_TILE_W + 1, FLOOR_H);
+    }
   }
 }
 
