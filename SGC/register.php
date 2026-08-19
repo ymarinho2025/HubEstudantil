@@ -65,7 +65,7 @@ form h2{color:#fff;text-align:center;font-size:18px}
 </head>
 <body>
 <header><img src="./src/images/dsa.png" alt="Logos dos clubes"></header>
-<h1>Sistema de Gestão de Clubes</h1>
+<h1>HUB Educacional</h1>
 <main>
 <form method="post">
 <h2>Solicitar uma conta</h2>

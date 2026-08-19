@@ -64,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Club Management System</title>
+    <title>HUB Educacional</title>
     <link rel="stylesheet" href="./src/css/style.css">
     <link rel="stylesheet" href="./src/css/form.css">
     <style>
@@ -74,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
     <header><img src="./src/images/dsa.png" alt="Logos dos clubes"></header>
-    <h1 id="title">Club Management System</h1>
+    <h1 id="title">HUB Educacional</h1>
     <main>
         <form id="loginForm" method="post" action="/index.php">
             <label id="userLabel" for="login">Your username:</label>
@@ -115,9 +115,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <script>
 const translations = {
- en:{title:'Club Management System',user:'Your username or email:',userP:'Email or username',pass:'Your password:',passP:'Type the password',code:'Complete the code:',codeP:'CODE DISPLAYED ABOVE',submit:'To access CMS',account:'Request An Account',privacy:'Privacy Policy',forgot:'Create / recover account'},
- pt:{title:'Sistema de Gestão de Clubes',user:'Seu usuário ou e-mail:',userP:'Digite seu e-mail ou usuário',pass:'Sua senha:',passP:'Digite sua senha',code:'Complete o código:',codeP:'CÓDIGO EXIBIDO ACIMA',submit:'Acessar o CMS',account:'Solicitar uma conta',privacy:'Política de Privacidade',forgot:'Criar / recuperar conta'},
- es:{title:'Sistema de Gestión de Clubes',user:'Su usuario o correo:',userP:'Ingrese correo o usuario',pass:'Su contraseña:',passP:'Ingrese su contraseña',code:'Complete el código:',codeP:'CÓDIGO MOSTRADO ARRIBA',submit:'Acceder al CMS',account:'Solicitar una cuenta',privacy:'Política de Privacidad',forgot:'Crear / recuperar cuenta'}
+ en:{title:'HUB Educacional',user:'Your username or email:',userP:'Email or username',pass:'Your password:',passP:'Type the password',code:'Complete the code:',codeP:'CODE DISPLAYED ABOVE',submit:'To access CMS',account:'Request An Account',privacy:'Privacy Policy',forgot:'Create / recover account'},
+ pt:{title:'HUB Educacional',user:'Seu usuário ou e-mail:',userP:'Digite seu e-mail ou usuário',pass:'Sua senha:',passP:'Digite sua senha',code:'Complete o código:',codeP:'CÓDIGO EXIBIDO ACIMA',submit:'Acessar o CMS',account:'Solicitar uma conta',privacy:'Política de Privacidade',forgot:'Criar / recuperar conta'},
+ es:{title:'HUB Educacional',user:'Su usuario o correo:',userP:'Ingrese correo o usuario',pass:'Su contraseña:',passP:'Ingrese su contraseña',code:'Complete el código:',codeP:'CÓDIGO MOSTRADO ARRIBA',submit:'Acceder al CMS',account:'Solicitar una cuenta',privacy:'Política de Privacidad',forgot:'Crear / recuperar cuenta'}
 };
 function setLang(l){
  const x=translations[l];
